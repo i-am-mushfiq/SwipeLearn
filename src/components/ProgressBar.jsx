@@ -1,7 +1,7 @@
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Star } from 'lucide-react';
 import { S, F } from '../theme.js';
 
-export function ProgressBar({current,total,revisitCount,confusedCount}){
+export function ProgressBar({current,total,revisitCount,confusedCount,starredCount=0}){
   const pct=total?Math.round(current/total*100):0;
   return(
     <div>
@@ -10,6 +10,7 @@ export function ProgressBar({current,total,revisitCount,confusedCount}){
         <span style={{display:"flex",gap:12,alignItems:"center"}}>
           {revisitCount>0&&<span data-testid="revisit-count" style={{color:S.danger,fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}><RotateCcw size={11}/>{revisitCount}</span>}
           {confusedCount>0&&<span style={{color:S.green,fontWeight:700}}>{confusedCount} flagged</span>}
+          {starredCount>0&&<span style={{color:S.star,fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}><Star size={11} fill={S.star}/>{starredCount}</span>}
           <span style={{color:S.white,fontWeight:700}}>{pct}%</span>
         </span>
       </div>

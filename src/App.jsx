@@ -366,7 +366,7 @@ export default function App(){
               <div style={{flex:1,fontSize:15,fontWeight:700,color:S.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeTopic?.title}</div>
             </div>
             <div style={{flexShrink:0}}>
-              <ProgressBar current={cardIndex} total={activeQueue.length} revisitCount={revisitIds.filter(id=>activeQueue.some(c=>c.id===id)).length} confusedCount={confusedIds.filter(id=>activeQueue.some(c=>c.id===id)).length}/>
+              <ProgressBar current={cardIndex} total={activeQueue.length} revisitCount={revisitIds.filter(id=>activeQueue.some(c=>c.id===id)).length} confusedCount={confusedIds.filter(id=>activeQueue.some(c=>c.id===id)).length} starredCount={starredIds.filter(id=>activeQueue.some(c=>c.id===id)).length}/>
             </div>
             {/* Card stack — grows to fill all remaining space so buttons sit at the bottom */}
             <div style={{position:"relative",flex:1,minHeight:0,marginTop:16}}>
