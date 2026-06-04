@@ -274,10 +274,25 @@ export default function App(){
 
   const handleReset=()=>{
     hap.error();
-    setCompletionMap({});setRevisitIds([]);setConfusedIds([]);setProgressMap({});
-    [KEYS.completion,KEYS.revisit,KEYS.confused,KEYS.progress].forEach(k=>lsSave(k,k===KEYS.revisit||k===KEYS.confused?[]:{}) );
+    setCompletionMap({});setRevisitIds([]);setConfusedIds([]);setStarredIds([]);setProgressMap({});
+    lsSave(KEYS.completion,{});lsSave(KEYS.revisit,[]);lsSave(KEYS.confused,[]);lsSave(KEYS.starred,[]);lsSave(KEYS.progress,{});
     setScreen("home");
   };
+
+  const handleResetTopic=useCallback((topic)=>{
+    hap.success();
+    const cardIds=new Set((topic.cards||[]).map(c=>c.id));
+    const nc=Object.fromEntries(Object.entries(completionMap).filter(([id])=>!cardIds.has(id)));
+    const ns=starredIds.filter(id=>!cardIds.has(id));
+    const nf=confusedIds.filter(id=>!cardIds.has(id));
+    const nr=revisitIds.filter(id=>!cardIds.has(id));
+    const np={...progressMap};delete np[topic.id];
+    setCompletionMap(nc);lsSave(KEYS.completion,nc);
+    setStarredIds(ns);lsSave(KEYS.starred,ns);
+    setConfusedIds(nf);lsSave(KEYS.confused,nf);
+    setRevisitIds(nr);lsSave(KEYS.revisit,nr);
+    setProgressMap(np);lsSave(KEYS.progress,np);
+  },[completionMap,starredIds,confusedIds,revisitIds,progressMap]);
 
   const revisitCards=activeTopic?activeTopic.cards.filter(c=>revisitIds.includes(c.id)):[];
   const confusedCards=activeTopic?activeTopic.cards.filter(c=>confusedIds.includes(c.id)):[];
@@ -336,7 +351,7 @@ export default function App(){
               </div>
             )}
           </div>
-          {library&&<DirectoryNode node={library} depth={0} onSelect={startTopic} completionMap={completionMap} progressMap={progressMap} confusedIds={confusedIds} starredIds={starredIds} onSelectFlagged={t=>startTopic(t,"flagged")} onSelectStarred={t=>startTopic(t,"starred")}/>}
+          {library&&<DirectoryNode node={library} depth={0} onSelect={startTopic} completionMap={completionMap} progressMap={progressMap} confusedIds={confusedIds} starredIds={starredIds} onSelectFlagged={t=>startTopic(t,"flagged")} onSelectStarred={t=>startTopic(t,"starred")} onResetTopic={handleResetTopic}/>}
           <div style={{marginTop:20,padding:"20px",background:S.elevated,borderRadius:8,border:`1px solid ${S.border}`,textAlign:"center"}}>
             <div style={{fontSize:14,fontWeight:700,color:S.white,fontFamily:F,marginBottom:4}}>Generate a topic with AI</div>
             <div style={{fontSize:13,color:S.subdued,fontFamily:F,marginBottom:16}}>Turn any subject into a ready-to-swipe card deck</div>

@@ -552,7 +552,9 @@ describe('Reset', () => {
       'sl-conf': ['t1'],
     });
     await screen.findByText('Tiny Topic');
-    await user.click(screen.getByRole('button', { name: /reset/i }));
+    // Reset moved to sidebar — open menu first, then click Reset all progress
+    await user.click(screen.getByRole('button', { name: /open menu/i }));
+    await user.click(await screen.findByRole('button', { name: /reset all progress/i }));
     // All localStorage progress keys should be cleared
     await waitFor(() => {
       expect(JSON.parse(localStorage.getItem('sl-comp') || '{}')).toEqual({});

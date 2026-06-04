@@ -8,8 +8,8 @@ export function EditorTree({node,depth=0,isRoot,onAddDir,onAddTopic,onEdit,onDel
   const[open,setOpen]=useState(true);
   // Cap indent so deeply-nested trees don't overflow phone screens
   const pad=Math.min(depth*16, 48);
-  const DelBtn=({id,stopProp=false})=>(
-    <button onClick={e=>{if(stopProp)e.stopPropagation();hap.error();onDelete(id);}}
+  const DelBtn=({id,title="",stopProp=false})=>(
+    <button onClick={e=>{if(stopProp)e.stopPropagation();onDelete(id,title);}}
       aria-label="Delete"
       style={{background:"none",border:"none",color:S.subdued,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",flexShrink:0,touchAction:"manipulation"}}
       onMouseEnter={e=>e.currentTarget.style.color=S.danger}
@@ -41,7 +41,7 @@ export function EditorTree({node,depth=0,isRoot,onAddDir,onAddTopic,onEdit,onDel
               <span style={{display:"inline-flex",alignItems:"center",gap:4}}><Download size={11}/>Export</span>
             </SpotifyBtn>
           )}
-          <DelBtn id={node.id}/>
+          <DelBtn id={node.id} title={node.title}/>
         </div>
       </div>
     );
@@ -57,7 +57,7 @@ export function EditorTree({node,depth=0,isRoot,onAddDir,onAddTopic,onEdit,onDel
         <span style={{fontSize:14,fontWeight:700,color:S.white,flex:1,fontFamily:F,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{node.title}</span>
         {!isRoot&&<>
           <SpotifyBtn size="sm" variant="ghost" onClick={e=>{e.stopPropagation();onEdit(node);}}>Rename</SpotifyBtn>
-          <DelBtn id={node.id} stopProp/>
+          <DelBtn id={node.id} title={node.title} stopProp/>
         </>}
       </div>
       {open&&<>

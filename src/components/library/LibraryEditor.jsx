@@ -14,10 +14,12 @@ import { PromptModal } from '../ai/PromptModal.jsx';
 export function LibraryEditor({library,onSave,onClose}){
   const[tree,setTree]=useState(library);
   const[modal,setModal]=useState(null);
+  const[pendingDelete,setPendingDelete]=useState(null); // {id, title}
   const addDir=(pid,t)=>{setTree(p=>rebuildPaths(insertInto(p,pid,{id:`dir-${uid()}`,title:t,type:"directory",children:[]})));setModal(null);};
   const addTopic=(pid,t)=>{setTree(p=>rebuildPaths(insertInto(p,pid,{id:`topic-${uid()}`,title:t,type:"topic",path:[],cards:[]})));setModal(null);};
   const renameNode=(id,t)=>{setTree(p=>rebuildPaths(findAndUpdate(p,id,n=>({...n,title:t}))));setModal(null);};
-  const deleteNode=(id)=>{setTree(p=>rebuildPaths(findAndDelete(p,id)));};
+  const requestDelete=(id,title)=>{setPendingDelete({id,title});};
+  const confirmDelete=()=>{hap.error();setTree(p=>rebuildPaths(findAndDelete(p,pendingDelete.id)));setPendingDelete(null);};
   const saveCards=(topic)=>{setTree(p=>rebuildPaths(findAndUpdate(p,topic.id,()=>topic)));setModal(null);};
   const handleImport=(data)=>{setTree(p=>rebuildPaths(insertInto(p,"root",{...data,id:data.id||`topic-${uid()}`,type:"topic",path:data.path||[]})));setModal(null);};
   const handleExportTopic=(node)=>{hap.success();downloadJson(toJsonFilename(node.title),exportTopicData(node));};
@@ -25,7 +27,7 @@ export function LibraryEditor({library,onSave,onClose}){
   return(
     <>
       <Modal title="Your Library" onClose={onClose} width={640}>
-        <EditorTree node={tree} isRoot onAddDir={id=>setModal({type:"dir",pid:id})} onAddTopic={id=>setModal({type:"topic",pid:id})} onEdit={n=>setModal({type:n.type==="directory"?"dir":"topic",node:n})} onDelete={deleteNode} onCards={n=>setModal({type:"cards",node:n})} onExport={handleExportTopic}/>
+        <EditorTree node={tree} isRoot onAddDir={id=>setModal({type:"dir",pid:id})} onAddTopic={id=>setModal({type:"topic",pid:id})} onEdit={n=>setModal({type:n.type==="directory"?"dir":"topic",node:n})} onDelete={requestDelete} onCards={n=>setModal({type:"cards",node:n})} onExport={handleExportTopic}/>
         <div style={{marginTop:24,paddingTop:16,borderTop:`1px solid ${S.border}`}}>
           <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
             <SpotifyBtn variant="ghost" onClick={()=>setModal({type:"prompt"})}>Generate prompt</SpotifyBtn>
@@ -42,6 +44,22 @@ export function LibraryEditor({library,onSave,onClose}){
       {modal?.type==="cards"&&<CardSetManager topic={modal.node} onSave={saveCards} onClose={()=>setModal(null)}/>}
       {modal?.type==="import"&&<ImportModal onClose={()=>setModal(null)} onImport={handleImport}/>}
       {modal?.type==="prompt"&&<PromptModal onClose={()=>setModal(null)} onImport={handleImport}/>}
+      {pendingDelete&&(
+        <Modal title="Delete?" onClose={()=>setPendingDelete(null)} width={360}>
+          <p style={{fontSize:14,color:S.subdued,fontFamily:"inherit",marginBottom:20,lineHeight:1.6}}>
+            Delete <strong style={{color:S.white}}>"{pendingDelete.title}"</strong>? This cannot be undone.
+          </p>
+          <div style={{display:"flex",gap:10}}>
+            <SpotifyBtn variant="ghost" onClick={()=>setPendingDelete(null)}>Cancel</SpotifyBtn>
+            <button onClick={confirmDelete}
+              style={{flex:1,padding:"14px 32px",borderRadius:500,background:"transparent",border:`1px solid ${S.danger}`,color:S.danger,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background=`${S.danger}18`;}}
+              onMouseLeave={e=>{e.currentTarget.style.background="transparent";}}>
+              Delete
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
