@@ -142,8 +142,8 @@ export function DraggableCard({ card, onSwipe, stackIndex, isTop, confused, onCo
   const dl = card.difficulty === 1 ? "Intro" : card.difficulty === 2 ? "Core" : "Advanced";
 
   return (
-    <div ref={ref} data-testid={isTop ? "active-card" : "background-card"} style={{ position: "absolute", width: "100%", maxWidth: 440, left: "50%", top: 0, transform: `translateX(-50%) ${tx}`, transition: tr, cursor: isTop ? "grab" : "default", userSelect: "none", zIndex: 10 - stackIndex, touchAction: "none", filter: stackIndex > 0 ? `brightness(${1 - stackIndex * 0.15})` : "none" }}>
-      <div style={{ background: S.card, borderRadius: 8, overflow: "hidden", position: "relative", boxShadow: isTop ? "0 8px 40px rgba(0,0,0,0.6)" : "0 2px 12px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", maxHeight: "min(68vh,540px)" }}>
+    <div ref={ref} data-testid={isTop ? "active-card" : "background-card"} style={{ position: "absolute", width: "100%", maxWidth: 440, left: "50%", top: 0, height: "100%", transform: `translateX(-50%) ${tx}`, transition: tr, cursor: isTop ? "grab" : "default", userSelect: "none", zIndex: 10 - stackIndex, touchAction: "none", filter: stackIndex > 0 ? `brightness(${1 - stackIndex * 0.15})` : "none" }}>
+      <div style={{ background: S.card, borderRadius: 8, overflow: "hidden", position: "relative", boxShadow: isTop ? "0 8px 40px rgba(0,0,0,0.6)" : "0 2px 12px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Difficulty bar — pinned top */}
         <div style={{ height: 3, background: dc, width: "100%", flexShrink: 0 }} />
         {/* Swipe overlays — position:absolute, don't affect flex flow */}

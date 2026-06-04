@@ -355,19 +355,26 @@ export default function App(){
       )}
 
       {screen==="learn"&&currentCard&&(
-        <div style={{maxWidth:520,margin:"0 auto",padding:"16px 16px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-            <button onClick={()=>{hap.light();setScreen("home");}} style={{background:"transparent",border:"none",color:S.subdued,fontSize:22,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%"}}
-              onMouseEnter={e=>e.currentTarget.style.color=S.white}
-              onMouseLeave={e=>e.currentTarget.style.color=S.subdued} aria-label="Back to library"><ChevronLeft size={24}/></button>
-            <div style={{flex:1,fontSize:15,fontWeight:700,color:S.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeTopic?.title}</div>
+        /* Fixed full-screen layer — the page itself never scrolls.
+           Only the card's inner scroll zone (pan-y) can scroll. */
+        <div style={{position:"fixed",inset:0,background:S.bg,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+          <div style={{maxWidth:520,width:"100%",margin:"0 auto",padding:"16px 16px",display:"flex",flexDirection:"column",flex:1,minHeight:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexShrink:0}}>
+              <button onClick={()=>{hap.light();setScreen("home");}} style={{background:"transparent",border:"none",color:S.subdued,fontSize:22,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%"}}
+                onMouseEnter={e=>e.currentTarget.style.color=S.white}
+                onMouseLeave={e=>e.currentTarget.style.color=S.subdued} aria-label="Back to library"><ChevronLeft size={24}/></button>
+              <div style={{flex:1,fontSize:15,fontWeight:700,color:S.white,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeTopic?.title}</div>
+            </div>
+            <div style={{flexShrink:0}}>
+              <ProgressBar current={cardIndex} total={activeQueue.length} revisitCount={revisitIds.filter(id=>activeQueue.some(c=>c.id===id)).length} confusedCount={confusedIds.filter(id=>activeQueue.some(c=>c.id===id)).length}/>
+            </div>
+            {/* Card stack — grows to fill all remaining space so buttons sit at the bottom */}
+            <div style={{position:"relative",flex:1,minHeight:0,marginTop:16}}>
+              {[2,1,0].map(offset=>{const c=activeQueue[cardIndex+offset];if(!c)return null;return <DraggableCard key={`${c.id}-${cardIndex}`} card={c} isTop={offset===0} stackIndex={offset} confused={confusedIds.includes(c.id)} onConfused={()=>toggleConfused(c.id)} starred={starredIds.includes(c.id)} onStarred={()=>toggleStarred(c.id)} onSwipe={advance} highlights={highlights} onHighlight={addHighlight}/>;}).filter(Boolean)}
+            </div>
+            <div style={{flexShrink:0}}><ActionBar onLeft={()=>advance("left")} onRight={()=>advance("right")} onBack={goBack} canBack={cardHistory.length>0}/></div>
+            <div style={{textAlign:"center",fontSize:12,color:S.faint,marginTop:4,marginBottom:4,flexShrink:0}}>Drag or tap · progress saved</div>
           </div>
-          <ProgressBar current={cardIndex} total={activeQueue.length} revisitCount={revisitIds.filter(id=>activeQueue.some(c=>c.id===id)).length} confusedCount={confusedIds.filter(id=>activeQueue.some(c=>c.id===id)).length}/>
-          <div style={{position:"relative",minHeight:500,marginTop:20}}>
-            {[2,1,0].map(offset=>{const c=activeQueue[cardIndex+offset];if(!c)return null;return <DraggableCard key={`${c.id}-${cardIndex}`} card={c} isTop={offset===0} stackIndex={offset} confused={confusedIds.includes(c.id)} onConfused={()=>toggleConfused(c.id)} starred={starredIds.includes(c.id)} onStarred={()=>toggleStarred(c.id)} onSwipe={advance} highlights={highlights} onHighlight={addHighlight}/>;}).filter(Boolean)}
-          </div>
-          <ActionBar onLeft={()=>advance("left")} onRight={()=>advance("right")} onBack={goBack} canBack={cardHistory.length>0}/>
-          <div style={{textAlign:"center",fontSize:12,color:S.faint,marginTop:8}}>Drag or tap · progress saved</div>
         </div>
       )}
 
