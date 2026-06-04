@@ -57,7 +57,7 @@ const navigateToLearn = async (user, extra = {}) => {
 describe('Home screen', () => {
   it('renders the home screen after initial load', async () => {
     setup();
-    await screen.findByText('Overall progress');
+    await screen.findByText('Deckwise Library & Folders');
   });
 
   it('shows 0% completion on fresh load', async () => {
@@ -77,36 +77,28 @@ describe('Home screen', () => {
     expect(await screen.findByText('Tiny Topic')).toBeInTheDocument();
   });
 
-  it('shows "0 of 2 cards" in overall progress for a 2-card library', async () => {
-    setup(TINY_LIBRARY);
-    expect(await screen.findByText(/0 of 2 cards/i)).toBeInTheDocument();
-  });
-
   it('shows 50% completion when one of two cards is pre-seeded complete', async () => {
     setup(TINY_LIBRARY, { 'sl-comp': { t1: true } });
     const pcts = await screen.findAllByText(/50%/);
     expect(pcts.length).toBeGreaterThan(0);
   });
 
-  it('shows the hamburger menu button', async () => {
-    setup();
-    expect(await screen.findByRole('button', { name: 'Open menu' })).toBeInTheDocument();
-  });
-
-  it('shows the "Edit library" button', async () => {
+  it('shows the "Edit library" icon button in the header', async () => {
     setup();
     expect(await screen.findByRole('button', { name: /edit library/i })).toBeInTheDocument();
   });
 
-  it('shows the "AI Prompt" toggle button', async () => {
+  it('shows the "AI Generator" action button', async () => {
     setup();
-    expect(await screen.findByRole('button', { name: /ai prompt/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /ai generator/i })).toBeInTheDocument();
   });
 
-  it('shows the "Generate with AI" CTA somewhere on the page', async () => {
+  it('shows the Library / Generate / Profile bottom nav', async () => {
     setup();
-    const els = await screen.findAllByText(/generate with ai/i);
-    expect(els.length).toBeGreaterThan(0);
+    await screen.findByText('Deckwise Library & Folders');
+    expect(screen.getByRole('button', { name: 'Library' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generate' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Profile' })).toBeInTheDocument();
   });
 });
 
@@ -115,19 +107,19 @@ describe('Home screen', () => {
 describe('Sidebar', () => {
   it('opens when the hamburger button is clicked', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     expect(await screen.findByText('Deckwise')).toBeInTheDocument();
   });
 
   it('shows "Sign in to sync" when no user is logged in', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     expect(await screen.findByText(/sign in to sync/i)).toBeInTheDocument();
   });
 
   it('shows all five color profile options', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     for (const name of ['Rustic Autumn', 'Midnight', 'Forest', 'Slate', 'Obsidian']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
@@ -135,7 +127,7 @@ describe('Sidebar', () => {
 
   it('shows all three community deck titles', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     expect(screen.getByText('Stoic Philosophy')).toBeInTheDocument();
     expect(screen.getByText('Financial Literacy 101')).toBeInTheDocument();
     expect(screen.getByText('The Art of Public Speaking')).toBeInTheDocument();
@@ -143,22 +135,22 @@ describe('Sidebar', () => {
 
   it('closes when the panel close button is clicked', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     await user.click(screen.getByRole('button', { name: 'Close sidebar' }));
     // Home screen is still intact after close
-    await screen.findByText('Overall progress');
+    await screen.findByText('Deckwise Library & Folders');
   });
 
   it('opens AuthModal when the Sign in button is clicked in the sidebar', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     await user.click(await screen.findByRole('button', { name: /^sign in$/i }));
     expect(await screen.findByText(/sign in with google/i)).toBeInTheDocument();
   });
 
   it('can add a community deck to the library and the button confirms', async () => {
     const user = setup(TINY_LIBRARY);
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     const addBtns = await screen.findAllByRole('button', { name: /add to library/i });
     await user.click(addBtns[0]);
     expect(await screen.findByRole('button', { name: /added/i })).toBeInTheDocument();
@@ -166,7 +158,7 @@ describe('Sidebar', () => {
 
   it('persists the chosen theme to localStorage when a color profile is clicked', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     await user.click(screen.getByText('Midnight'));
     await waitFor(() => {
       expect(localStorage.getItem('sl-theme')).toBe('"midnight"');
@@ -179,7 +171,7 @@ describe('Sidebar', () => {
 describe('AuthModal', () => {
   const openAuthModal = async (user) => {
     setup();
-    await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     await user.click(await screen.findByRole('button', { name: /^sign in$/i }));
     await screen.findByText(/sign in with google/i);
   };
@@ -238,27 +230,28 @@ describe('Library editor', () => {
   });
 });
 
-// ── AI Prompt panel ───────────────────────────────────────────────────────────
+// ── AI Generator modal ────────────────────────────────────────────────────────
 
-describe('AI Prompt panel', () => {
-  it('expands when "AI Prompt" is clicked', async () => {
+describe('AI Generator modal', () => {
+  it('opens when "AI Generator" is clicked', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: /ai prompt/i }));
+    await user.click(await screen.findByRole('button', { name: /ai generator/i }));
     expect(await screen.findByTestId('prompt-panel')).toBeInTheDocument();
   });
 
-  it('shows Topic and Audience input fields', async () => {
+  it('shows Topic and Audience input fields inside the modal', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: /ai prompt/i }));
+    await user.click(await screen.findByRole('button', { name: /ai generator/i }));
     expect(await screen.findByPlaceholderText(/how transformers work/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/software engineers/i)).toBeInTheDocument();
   });
 
-  it('collapses when "Close" is clicked and input fields disappear', async () => {
+  it('closes when the modal Close button is clicked', async () => {
     const user = setup();
-    await user.click(await screen.findByRole('button', { name: /ai prompt/i }));
+    await user.click(await screen.findByRole('button', { name: /ai generator/i }));
     await screen.findByPlaceholderText(/how transformers work/i);
-    await user.click(screen.getByRole('button', { name: /^close$/i }));
+    const modal = await screen.findByTestId('generate-modal');
+    await user.click(within(modal).getByRole('button', { name: /close/i }));
     await waitFor(() => {
       expect(screen.queryByPlaceholderText(/how transformers work/i)).not.toBeInTheDocument();
     });
@@ -402,7 +395,7 @@ describe('Learn screen', () => {
     const user = userEvent.setup();
     await navigateToLearn(user);
     await user.click(screen.getByRole('button', { name: 'Back to library' }));
-    await screen.findByText('Overall progress');
+    await screen.findByText('Deckwise Library & Folders');
   });
 
   it('shows the completion screen after advancing through all cards', async () => {
@@ -441,7 +434,7 @@ describe('Completion screen', () => {
     const user = userEvent.setup();
     await completeAllCards(user);
     await user.click(screen.getByRole('button', { name: /back to library/i }));
-    await screen.findByText('Overall progress');
+    await screen.findByText('Deckwise Library & Folders');
   });
 
   it('home screen shows 100% after completing all cards', async () => {
@@ -553,7 +546,7 @@ describe('Reset', () => {
     });
     await screen.findByText('Tiny Topic');
     // Reset moved to sidebar — open menu first, then click Reset all progress
-    await user.click(screen.getByRole('button', { name: /open menu/i }));
+    await user.click(await screen.findByRole('button', { name: /profile/i }));
     await user.click(await screen.findByRole('button', { name: /reset all progress/i }));
     // All localStorage progress keys should be cleared
     await waitFor(() => {

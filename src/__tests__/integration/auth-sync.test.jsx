@@ -76,7 +76,7 @@ const setupWithUser = (userId = 'user-123', library = null, extraStorage = {}) =
 };
 
 const openAuthModal = async (user) => {
-  await user.click(await screen.findByRole('button', { name: 'Open menu' }));
+  await user.click(await screen.findByRole('button', { name: /profile/i }));
   await user.click(await screen.findByRole('button', { name: /^sign in$/i }));
   await screen.findByText(/sign in with google/i);
 };
@@ -183,7 +183,7 @@ describe('Sign out', () => {
 
     const user = userEvent.setup();
     setup();
-    await screen.findByText('Overall progress');
+    await screen.findByText('Deckwise Library & Folders');
 
     // Simulate the auth state change to SIGNED_IN
     await act(async () => {
@@ -191,7 +191,7 @@ describe('Sign out', () => {
     });
 
     // Open sidebar — user is now logged in, so Sign Out appears
-    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    await user.click(screen.getByRole('button', { name: /profile/i }));
     const signOutBtn = await screen.findByRole('button', { name: /sign out/i });
     await user.click(signOutBtn);
 

@@ -100,7 +100,7 @@ Rules: one idea per card, each card builds on the last, difficulty 1=Intro 2=Cor
   ];
 
   return(
-    <>
+    <div data-testid="prompt-panel">
       <Field label="Topic">
         <input style={inpStyle()} value={topic} onChange={e=>setTopic(e.target.value)} placeholder='e.g. How transformers work' autoFocus={!inline} onFocus={e=>e.target.style.borderColor=S.white} onBlur={e=>e.target.style.borderColor=S.border}/>
       </Field>
@@ -206,6 +206,6 @@ Rules: one idea per card, each card builds on the last, difficulty 1=Intro 2=Cor
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

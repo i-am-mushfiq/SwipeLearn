@@ -44,7 +44,7 @@ const setup = (library = null) => {
  * Targeting the panel by `data-testid="prompt-panel"` avoids false-matches.
  */
 const openPromptPanel = async (user) => {
-  await user.click(await screen.findByRole('button', { name: /ai prompt/i }));
+  await user.click(await screen.findByRole('button', { name: /ai generator/i }));
   const panelEl = await screen.findByTestId('prompt-panel');
   return within(panelEl);
 };

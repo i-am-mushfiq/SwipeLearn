@@ -9,7 +9,7 @@ import { useSync } from "./hooks/useSync.js";
 import { useAiUsage } from "./hooks/useAiUsage.js";
 
 // Components
-import { Menu, X, ChevronLeft, RotateCcw } from "lucide-react";
+import { X, ChevronLeft, RotateCcw, Search, Pencil, Sparkles, Upload, BookMarked, Zap, User } from "lucide-react";
 import { SpotifyBtn } from "./components/ui/SpotifyBtn.jsx";
 import { DraggableCard } from "./components/DraggableCard.jsx";
 import { ActionBar } from "./components/ActionBar.jsx";
@@ -23,6 +23,7 @@ import { DirectoryNode } from "./components/library/DirectoryNode.jsx";
 import { PromptContent } from "./components/ai/PromptContent.jsx";
 import { PromptModal } from "./components/ai/PromptModal.jsx";
 import { HighlightsModal } from "./components/HighlightsModal.jsx";
+import { ImportModal } from "./components/library/ImportModal.jsx";
 
 export default function App(){
   const[ready,setReady]=useState(false);
@@ -40,6 +41,7 @@ export default function App(){
   const[showEditor,setShowEditor]=useState(false);
   const[showPromptPanel,setShowPromptPanel]=useState(false);
   const[showQuickGenerate,setShowQuickGenerate]=useState(false);
+  const[showHomeImport,setShowHomeImport]=useState(false);
   const[sidebarOpen,setSidebarOpen]=useState(false);
   const[themeName,setThemeName]=useState(()=>{try{return JSON.parse(localStorage.getItem("sl-theme"))||"autumn";}catch{return"autumn";}});
   const[cardHistory,setCardHistory]=useState([]);
@@ -196,6 +198,16 @@ export default function App(){
     });
   },[]);
 
+  // Home screen JSON Import — data is already normalised by ImportModal (fresh IDs assigned)
+  const handleHomeImport=useCallback((data)=>{
+    setLibrary(prev=>{
+      const updated=rebuildPaths(insertInto(prev,"root",data));
+      lsSave(KEYS.library,updated);
+      return updated;
+    });
+    setShowHomeImport(false);
+  },[]);
+
   const topics=library?flattenTopics(library):[];
   const currentCard=activeQueue[cardIndex];
   const totalCards=topics.reduce((s,t)=>s+t.cards.length,0);
@@ -310,62 +322,82 @@ export default function App(){
       <style>{`*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}button{font-family:${F};}::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:${S.faint};border-radius:2px;}`}</style>
 
       {screen==="home"&&(
-        <div style={{maxWidth:520,margin:"0 auto",padding:"24px 16px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:showPromptPanel?16:28}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <button onClick={()=>{hap.light();setSidebarOpen(true);}} style={{background:"transparent",border:"none",color:S.subdued,fontSize:20,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",transition:"color 0.15s"}}
+        <div style={{height:"100dvh",overflow:"hidden",display:"flex",flexDirection:"column",background:S.bg}}>
+
+          {/* ── Header ── */}
+          <div style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px 20px 14px",borderBottom:`1px solid ${S.border}`,position:"relative"}}>
+            <span style={{fontSize:17,fontWeight:700,color:S.green,fontFamily:F,letterSpacing:"-0.01em"}}>Deckwise Library & Folders</span>
+            <div style={{position:"absolute",right:12,display:"flex",gap:2}}>
+              <button onClick={()=>setShowEditor(true)} aria-label="Edit library"
+                style={{background:"transparent",border:"none",color:S.subdued,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",transition:"color 0.15s"}}
                 onMouseEnter={e=>e.currentTarget.style.color=S.white}
-                onMouseLeave={e=>e.currentTarget.style.color=S.subdued} aria-label="Open menu"><Menu size={20}/></button>
-              <img src="/icon-192.png" alt="Deckwise" style={{width:36,height:36,borderRadius:8}}/>
-            </div>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <button onClick={()=>{hap.light();setShowPromptPanel(p=>!p);}} style={{background:showPromptPanel?`${S.green}18`:"transparent",border:`1px solid ${showPromptPanel?S.green:S.border}`,color:showPromptPanel?S.green:S.subdued,borderRadius:500,padding:"7px 14px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:F,transition:"all 0.15s",whiteSpace:"nowrap"}}
-                onMouseEnter={e=>{if(!showPromptPanel){e.currentTarget.style.borderColor=S.subdued;e.currentTarget.style.color=S.white;}}}
-                onMouseLeave={e=>{if(!showPromptPanel){e.currentTarget.style.borderColor=S.border;e.currentTarget.style.color=S.subdued;}}}>
-                {showPromptPanel?<span style={{display:"inline-flex",alignItems:"center",gap:5}}><X size={13}/>Close</span>:"AI Prompt"}
+                onMouseLeave={e=>e.currentTarget.style.color=S.subdued}>
+                <Pencil size={17}/>
               </button>
-              <SpotifyBtn size="sm" onClick={()=>setShowEditor(true)}>Edit library</SpotifyBtn>
+              <button aria-label="Search" style={{background:"transparent",border:"none",color:S.subdued,cursor:"pointer",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",transition:"color 0.15s"}}
+                onMouseEnter={e=>e.currentTarget.style.color=S.white}
+                onMouseLeave={e=>e.currentTarget.style.color=S.subdued}>
+                <Search size={17}/>
+              </button>
             </div>
           </div>
-          {showPromptPanel&&(
-            <div data-testid="prompt-panel" style={{background:S.elevated,border:`1px solid ${S.border}`,borderRadius:8,padding:"20px",marginBottom:24}}>
-              <div style={{fontSize:13,fontWeight:700,color:S.green,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:16,fontFamily:F}}>Generate with AI</div>
-              <PromptContent inline onImport={handleDirectImport} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} onUsageUpdate={handleUsageUpdate}/>
-            </div>
-          )}
-          <div style={{background:S.card,borderRadius:8,padding:"20px",marginBottom:24}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:14}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,color:S.subdued,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:6}}>Overall progress</div>
-                <div style={{fontSize:13,color:S.subdued,fontFamily:F}}>{doneCards} of {totalCards} cards</div>
+
+          {/* ── Scrollable body ── */}
+          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+
+            {/* AI usage card */}
+            <div style={{margin:"16px 16px 14px",background:S.elevated,borderRadius:14,padding:"14px 16px",border:`1px solid ${S.border}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <span style={{fontSize:14,fontWeight:700,color:S.white,fontFamily:F}}>Groq Llama 3.3</span>
+                <span style={{fontSize:12,color:S.subdued,fontFamily:F}}>{aiUsage.count}/{AI_TIERS.free.dailyLimit} cards remaining</span>
               </div>
-              <div style={{fontSize:32,fontWeight:700,color:S.green}}>{pct}<span style={{fontSize:18,color:S.subdued}}>%</span></div>
-            </div>
-            <div style={{height:4,background:S.faint,borderRadius:2,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${pct}%`,background:S.green,borderRadius:2,transition:"width 0.5s"}}/>
-            </div>
-            {(revisitIds.length>0||confusedIds.length>0)&&(
-              <div style={{display:"flex",gap:16,marginTop:14}}>
-                {revisitIds.length>0&&<span style={{fontSize:13,color:S.danger,fontWeight:700,display:"inline-flex",alignItems:"center",gap:4}}><RotateCcw size={12}/>{revisitIds.length} to review</span>}
-                {confusedIds.length>0&&<span style={{fontSize:13,color:S.green,fontWeight:700}}>{confusedIds.length} flagged</span>}
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{flex:1,height:5,background:S.faint,borderRadius:3,overflow:"hidden"}}>
+                  <div style={{width:`${Math.min(100,(aiUsage.count/AI_TIERS.free.dailyLimit)*100)}%`,height:"100%",background:aiUsage.count>=AI_TIERS.free.dailyLimit?S.danger:aiUsage.count/AI_TIERS.free.dailyLimit>=0.9?"#f59e0b":S.green,borderRadius:3,transition:"width 0.4s"}}/>
+                </div>
+                <span style={{fontSize:12,fontWeight:700,color:S.white,fontFamily:F,minWidth:32,textAlign:"right"}}>{Math.round((aiUsage.count/AI_TIERS.free.dailyLimit)*100)}%</span>
               </div>
-            )}
-          </div>
-          {library&&<DirectoryNode node={library} depth={0} onSelect={startTopic} completionMap={completionMap} progressMap={progressMap} confusedIds={confusedIds} starredIds={starredIds} onSelectFlagged={t=>startTopic(t,"flagged")} onSelectStarred={t=>startTopic(t,"starred")} onResetTopic={handleResetTopic}/>}
-          <div style={{marginTop:20,padding:"20px",background:S.elevated,borderRadius:8,border:`1px solid ${S.border}`,textAlign:"center"}}>
-            <div style={{fontSize:14,fontWeight:700,color:S.white,fontFamily:F,marginBottom:4}}>Generate a topic with AI</div>
-            <div style={{fontSize:13,color:S.subdued,fontFamily:F,marginBottom:16}}>Turn any subject into a ready-to-swipe card deck</div>
-            <SpotifyBtn fullWidth onClick={()=>{hap.medium();setShowQuickGenerate(true);}}>Generate with AI ✦</SpotifyBtn>
-          </div>
-          <div style={{marginTop:12,background:S.card,borderRadius:8,padding:"16px 20px"}}>
-            <div style={{fontSize:13,fontWeight:700,color:S.subdued,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:14}}>How to swipe</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              {[["← Left","Got it ✓",S.green],["→ Right","Review ↺",S.danger],["↑ Up","Deep dive",S.white],["Flag btn","Research",S.subdued]].map(([k,v,c])=>(
-                <div key={k}><div style={{fontSize:13,fontWeight:700,color:c,marginBottom:2}}>{k}</div><div style={{fontSize:12,color:S.faint}}>{v}</div></div>
-              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{display:"flex",gap:12,margin:"0 16px 24px"}}>
+              <button onClick={()=>{hap.medium();setShowQuickGenerate(true);}}
+                style={{flex:1,padding:"13px 8px",background:S.green,border:"none",borderRadius:500,color:"#1c1208",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:F,display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"transform 0.1s,background 0.1s"}}
+                onMouseEnter={e=>{e.currentTarget.style.background=S.greenHover;e.currentTarget.style.transform="scale(1.03)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background=S.green;e.currentTarget.style.transform="scale(1)";}}>
+                <Sparkles size={15}/> AI Generator
+              </button>
+              <button onClick={()=>{hap.medium();setShowHomeImport(true);}}
+                style={{flex:1,padding:"13px 8px",background:"transparent",border:`1.5px solid ${S.border}`,borderRadius:500,color:S.white,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:F,display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"transform 0.1s,border-color 0.15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=S.subdued;e.currentTarget.style.transform="scale(1.03)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;e.currentTarget.style.transform="scale(1)";}}>
+                <Upload size={15}/> JSON Import
+              </button>
+            </div>
+
+            {/* Library tree */}
+            <div style={{padding:"0 16px 16px"}}>
+              {library&&<DirectoryNode node={library} depth={0} onSelect={startTopic} completionMap={completionMap} progressMap={progressMap} confusedIds={confusedIds} starredIds={starredIds} onSelectFlagged={t=>startTopic(t,"flagged")} onSelectStarred={t=>startTopic(t,"starred")} onResetTopic={handleResetTopic} onOpenEditor={()=>setShowEditor(true)}/>}
             </div>
           </div>
-          <div style={{marginTop:10,textAlign:"center",fontSize:12,color:S.faint}}>All progress saved automatically</div>
+
+          {/* ── Bottom nav ── */}
+          <div style={{flexShrink:0,display:"flex",background:S.surface,borderTop:`1px solid ${S.border}`,height:64}}>
+            {[
+              {icon:<BookMarked size={21}/>,label:"Library",active:true,onClick:()=>{}},
+              {icon:<Zap size={21}/>,label:"Generate",active:false,onClick:()=>{hap.medium();setShowQuickGenerate(true);}},
+              {icon:<User size={21}/>,label:"Profile",active:false,onClick:()=>{hap.light();setSidebarOpen(true);}},
+            ].map(({icon,label,active,onClick})=>(
+              <button key={label} onClick={onClick}
+                style={{flex:1,background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,color:active?S.green:S.subdued,fontFamily:F,padding:"6px 0",transition:"color 0.15s"}}
+                onMouseEnter={e=>e.currentTarget.style.color=active?S.green:S.white}
+                onMouseLeave={e=>e.currentTarget.style.color=active?S.green:S.subdued}>
+                {icon}
+                <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.04em"}}>{label}</span>
+              </button>
+            ))}
+          </div>
+
         </div>
       )}
 
@@ -400,6 +432,7 @@ export default function App(){
       )}
 
       {showEditor&&library&&<LibraryEditor library={library} onSave={saveLibrary} onClose={()=>setShowEditor(false)}/>}
+      {showHomeImport&&<ImportModal onClose={()=>setShowHomeImport(false)} onImport={handleHomeImport}/>}
       {showQuickGenerate&&<PromptModal onClose={()=>setShowQuickGenerate(false)} onImport={handleDirectImport} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} onUsageUpdate={handleUsageUpdate}/>}
       <Sidebar open={sidebarOpen} onClose={()=>setSidebarOpen(false)} themeName={themeName} onTheme={switchTheme} library={library||{id:"root",type:"directory",children:[]}} onAddDeck={handleDirectImport} user={user} onSignIn={()=>{setSidebarOpen(false);setShowAuth(true);}} onSignOut={signOut} syncStatus={syncStatus} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} highlightCount={highlights.length} onShowHighlights={()=>setShowHighlights(true)} onReset={handleReset}/>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
