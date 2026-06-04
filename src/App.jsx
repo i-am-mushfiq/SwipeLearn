@@ -310,9 +310,6 @@ export default function App(){
                 {showPromptPanel?<span style={{display:"inline-flex",alignItems:"center",gap:5}}><X size={13}/>Close</span>:"AI Prompt"}
               </button>
               <SpotifyBtn size="sm" onClick={()=>setShowEditor(true)}>Edit library</SpotifyBtn>
-              <button onClick={handleReset} style={{background:"transparent",border:"none",color:S.faint,fontSize:13,cursor:"pointer",fontFamily:F,padding:"4px 8px"}}
-                onMouseEnter={e=>e.currentTarget.style.color=S.subdued}
-                onMouseLeave={e=>e.currentTarget.style.color=S.faint}>Reset</button>
             </div>
           </div>
           {showPromptPanel&&(
@@ -382,7 +379,7 @@ export default function App(){
 
       {showEditor&&library&&<LibraryEditor library={library} onSave={saveLibrary} onClose={()=>setShowEditor(false)}/>}
       {showQuickGenerate&&<PromptModal onClose={()=>setShowQuickGenerate(false)} onImport={handleDirectImport} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} onUsageUpdate={handleUsageUpdate}/>}
-      <Sidebar open={sidebarOpen} onClose={()=>setSidebarOpen(false)} themeName={themeName} onTheme={switchTheme} library={library||{id:"root",type:"directory",children:[]}} onAddDeck={handleDirectImport} user={user} onSignIn={()=>{setSidebarOpen(false);setShowAuth(true);}} onSignOut={signOut} syncStatus={syncStatus} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} highlightCount={highlights.length} onShowHighlights={()=>setShowHighlights(true)}/>
+      <Sidebar open={sidebarOpen} onClose={()=>setSidebarOpen(false)} themeName={themeName} onTheme={switchTheme} library={library||{id:"root",type:"directory",children:[]}} onAddDeck={handleDirectImport} user={user} onSignIn={()=>{setSidebarOpen(false);setShowAuth(true);}} onSignOut={signOut} syncStatus={syncStatus} aiUsage={aiUsage.count} aiLimit={AI_TIERS.free.dailyLimit} highlightCount={highlights.length} onShowHighlights={()=>setShowHighlights(true)} onReset={handleReset}/>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)}/>}
       {showHighlights&&<HighlightsModal highlights={highlights} onRemove={removeHighlight} onClose={()=>setShowHighlights(false)}/>}
       {mergeCandidate&&<MergeModal onKeepLocal={handleKeepLocal} onUseCloud={handleUseCloud}/>}

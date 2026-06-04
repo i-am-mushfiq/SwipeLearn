@@ -4,7 +4,7 @@ import { hap, snd } from '../audio.js';
 import { flattenTopics } from '../lib.js';
 import { COMMUNITY_DECKS } from '../constants.js';
 
-export function Sidebar({open,onClose,themeName,onTheme,library,onAddDeck,user,onSignIn,onSignOut,syncStatus="idle",aiUsage=0,aiLimit=1000,highlightCount=0,onShowHighlights}){
+export function Sidebar({open,onClose,themeName,onTheme,library,onAddDeck,user,onSignIn,onSignOut,syncStatus="idle",aiUsage=0,aiLimit=1000,highlightCount=0,onShowHighlights,onReset}){
   const syncLabel={
     idle:{text:"Synced",color:S.faint,dot:S.faint,check:false},
     pending:{text:"Saving…",color:S.subdued,dot:S.subdued,check:false},
@@ -121,6 +121,17 @@ export function Sidebar({open,onClose,themeName,onTheme,library,onAddDeck,user,o
             <Highlighter size={15} color="#f59e0b"/>
             <span style={{fontSize:13,fontWeight:700,color:S.white,fontFamily:F,flex:1,textAlign:"left"}}>My Highlights</span>
             {highlightCount>0&&<span style={{fontSize:11,fontWeight:700,color:"#f59e0b",background:"#f59e0b18",border:"1px solid #f59e0b44",borderRadius:500,padding:"2px 8px",fontFamily:F}}>{highlightCount}</span>}
+          </button>
+        </div>
+
+        {/* ── Settings ── */}
+        <div style={{padding:"0 16px 16px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:S.subdued,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:10,fontFamily:F}}>Settings</div>
+          <button onClick={()=>{hap.error();onReset?.();onClose();}}
+            style={{width:"100%",padding:"10px 0",background:"transparent",border:`1px solid ${S.border}`,borderRadius:500,color:S.subdued,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=S.danger;e.currentTarget.style.color=S.danger;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;e.currentTarget.style.color=S.subdued;}}>
+            Reset all progress
           </button>
         </div>
 
