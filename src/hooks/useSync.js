@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase.js';
-import { KEYS, lsLoad, lsSave } from '../lib.js';
+import { KEYS, lsLoad, lsSave, pruneOrphanedIds } from '../lib.js';
 
 export function useSync({
   library, completionMap, revisitIds, confusedIds, starredIds, progressMap, highlights,
@@ -33,19 +33,40 @@ export function useSync({
     return error;
   }, [DEMO_DATA]);
 
-  // Overwrites in-memory + localStorage state with cloud data
+  // Overwrites in-memory + localStorage state with cloud data, then prunes any
+  // orphaned card/topic IDs. Pruning here is critical: cloud data may predate
+  // the schema v2 migration (migrateLocalStorage only touches localStorage, never
+  // Supabase), so stale completion_map / starred_ids entries from deleted or
+  // de-duplicated topics must be removed before the data reaches React state.
   const applyCloudData = useCallback((data) => {
     cloudSyncEnabled.current = false;
-    if (data.library) { setLibrary(data.library); lsSave(KEYS.library, data.library); }
-    if (data.completion_map) { setCompletionMap(data.completion_map); lsSave(KEYS.completion, data.completion_map); }
-    if (data.revisit_ids) { setRevisitIds(data.revisit_ids); lsSave(KEYS.revisit, data.revisit_ids); }
-    if (data.confused_ids) { setConfusedIds(data.confused_ids); lsSave(KEYS.confused, data.confused_ids); }
-    if (data.starred_ids) { setStarredIds(data.starred_ids); lsSave(KEYS.starred, data.starred_ids); }
-    if (data.progress_map) { setProgressMap(data.progress_map); lsSave(KEYS.progress, data.progress_map); }
+
+    const lib = data.library || lsLoad(KEYS.library, DEMO_DATA);
+    if (data.library) lsSave(KEYS.library, lib);
+
+    // Prune all five state slices against the (just-applied) library so that any
+    // stale IDs that never made it through the local migration are removed now.
+    const pruned = pruneOrphanedIds(lib, {
+      completionMap: data.completion_map || lsLoad(KEYS.completion, {}),
+      starredIds:    data.starred_ids    || lsLoad(KEYS.starred, []),
+      confusedIds:   data.confused_ids   || lsLoad(KEYS.confused, []),
+      revisitIds:    data.revisit_ids    || lsLoad(KEYS.revisit, []),
+      progressMap:   data.progress_map   || lsLoad(KEYS.progress, {}),
+    });
+
+    setLibrary(lib);
+    setCompletionMap(pruned.completionMap); lsSave(KEYS.completion, pruned.completionMap);
+    setRevisitIds(pruned.revisitIds);       lsSave(KEYS.revisit,    pruned.revisitIds);
+    setConfusedIds(pruned.confusedIds);     lsSave(KEYS.confused,   pruned.confusedIds);
+    setStarredIds(pruned.starredIds);       lsSave(KEYS.starred,    pruned.starredIds);
+    setProgressMap(pruned.progressMap);     lsSave(KEYS.progress,   pruned.progressMap);
     if (data.highlights) { setHighlights(data.highlights); lsSave(KEYS.highlights, data.highlights); }
-    // Small delay before re-enabling sync to let React batch the state updates
+
+    // Small delay before re-enabling sync to let React batch the state updates.
+    // The debounced sync that fires afterwards will push the pruned state back to
+    // Supabase, ensuring the cloud row is cleaned up for all future loads.
     setTimeout(() => { cloudSyncEnabled.current = true; }, 600);
-  }, [setLibrary, setCompletionMap, setRevisitIds, setConfusedIds, setStarredIds, setProgressMap, setHighlights]);
+  }, [setLibrary, setCompletionMap, setRevisitIds, setConfusedIds, setStarredIds, setProgressMap, setHighlights, DEMO_DATA]);
 
   const loadCloudData = useCallback(async (userId) => {
     if (!supabase) return;
